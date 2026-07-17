@@ -7,6 +7,17 @@ import { canon, nonce } from './terms.ts';
  * KATs — the known answers are published results, reproduced by *search*, not by
  * script. The engine is told the protocol and the goal; it is never told the
  * attack. If these pass, the machine found the attacks the way Lowe did.
+ *
+ * Literature the known answers are checked against:
+ *   - D. Dolev and A. Yao, "On the Security of Public Key Protocols," IEEE
+ *     Trans. Information Theory, 1983 — the attacker model.
+ *   - R. Needham and M. Schroeder, "Using Encryption for Authentication in
+ *     Large Networks of Computers," CACM, 1978 — the protocol.
+ *   - G. Lowe, "An Attack on the Needham-Schroeder Public-Key Authentication
+ *     Protocol," Information Processing Letters, 1995; and "Breaking and Fixing
+ *     the Needham-Schroeder Public-Key Protocol," TACAS, 1996 — the attack and
+ *     the one-field fix reproduced below. The six-message trace asserted here is
+ *     Lowe's published interleaving.
  */
 
 describe('KAT: Needham-Schroeder Public Key — Lowe attack (1995)', () => {

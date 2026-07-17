@@ -11,6 +11,7 @@
 import { runSearch, SearchResult, TraceStep } from './symbolic/search.ts';
 import { protocolById, Protocol } from './symbolic/protocol.ts';
 import { analyse, RULE_TEXT, Fact } from './symbolic/intruder.ts';
+import { explainRepair } from './symbolic/explain.ts';
 import { canon, pretty } from './symbolic/terms.ts';
 
 const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -328,6 +329,12 @@ function render(): void {
   // the man-in-the-middle diagram — the headline "show", synced to the stepper
   if (state.result && state.result.found) body.append(ladderPanel(state.result, proto));
 
+  // for a secure verdict on a repaired protocol: the engine-DERIVED reason
+  if (state.result && !state.result.found) {
+    const rp = repairPanel(entry);
+    if (rp) body.append(rp);
+  }
+
   // search status + workbench (only meaningful after a run)
   body.append(searchStatus());
   if (state.result) body.append(workbench());
@@ -401,7 +408,9 @@ function verdictPanel(proto: Protocol): HTMLElement {
     } else {
       cls = 'indicator indicator--ok';
       icon = '✓';
-      const reason = proto.secureReason ? `${proto.secureReason} ` : '';
+      const entry = currentEntry();
+      const hasDerived = entry.fixed && state.fixOn && !!explainRepair(protocolById(entry.base), protocolById(entry.fixed));
+      const reason = hasDerived ? 'The engine derives exactly why below. ' : proto.secureReason ? `${proto.secureReason} ` : '';
       note = `${reason}No attack in this model within ${r.statesExplored.toLocaleString()} states${
         r.boundHit ? ' (state cap reached)' : ' (space fully exhausted)'
       } — not a proof of security.`;
@@ -563,6 +572,69 @@ function laneHead(actor: string, role: string, belief: Belief | null): HTMLEleme
     if (belief.deceived) head.append(el('span', { class: 'lane-belief lane-belief-real' }, [`actually ${belief.attacker}`]));
   }
   return head;
+}
+
+// ---- derived "why the repair holds" -------------------------------------
+
+function repairPanel(entry: LibEntry): HTMLElement | null {
+  if (!entry.fixed || !state.fixOn) return null;
+  const d = explainRepair(protocolById(entry.base), protocolById(entry.fixed));
+  if (!d) return null;
+
+  const panel = el('section', { class: 'card repair-card' });
+  panel.append(
+    el('p', { class: 'kicker' }, ['Why the repair holds — derived, not asserted']),
+    el('h3', {}, ['The engine shows its work']),
+    el('p', {}, [
+      'The secure verdict is not editorial. The same primitives that find attacks (unification, the attacker’s synthesis rules) locate the exact point the relay breaks:',
+    ]),
+  );
+
+  const steps = el('ol', { class: 'repair-steps' });
+  steps.append(
+    el('li', {}, [
+      el('span', { class: 'repair-lead' }, [`${d.pivotActor} now checks message 2 against `]),
+      el('code', { class: 'mono' }, [d.pivotPattern]),
+      '.',
+    ]),
+    el('li', {}, [
+      'The reply the attacker can relay from the responder is ',
+      el('code', { class: 'mono' }, [d.honestReply]),
+      '.',
+    ]),
+  );
+  if (d.relayConflict) {
+    steps.append(
+      el('li', { class: 'repair-block' }, [
+        'These no longer unify: the pattern requires ',
+        el('code', { class: 'mono' }, [d.relayConflict.expected]),
+        ' where the reply carries ',
+        el('code', { class: 'mono' }, [d.relayConflict.got]),
+        ` — so ${d.pivotActor} rejects it.`,
+      ]),
+    );
+  }
+  if (d.synthesisObstacle) {
+    steps.append(
+      el('li', { class: 'repair-block' }, [
+        'To substitute its own share the attacker would have to present ',
+        el('code', { class: 'mono' }, [d.synthesisObstacle.needed]),
+        ` — but ${d.synthesisObstacle.reason}.`,
+      ]),
+    );
+  }
+  if (d.goalUnobtainable) {
+    steps.append(
+      el('li', {}, [
+        'And it cannot build the needed message itself: ',
+        el('code', { class: 'mono' }, [d.goalText]),
+        ' is not in its knowledge (it is sealed where only an honest party can open it). ',
+        el('span', { class: 'repair-conclusion' }, ['No path to the goal — verified by the search exhausting the space.']),
+      ]),
+    );
+  }
+  panel.append(steps);
+  return panel;
 }
 
 function expertDetails(): HTMLElement {

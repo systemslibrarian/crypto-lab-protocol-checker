@@ -23,10 +23,14 @@ async function driveDemos(page: Page): Promise<void> {
   const fwd = page.getByRole('button', { name: 'Step ▶' });
   for (let i = 0; i < 2; i++) if (await fwd.isEnabled()) await fwd.click();
 
-  // 2. Apply the Lowe fix → secure verdict.
+  // 2. Apply the Lowe fix → secure verdict + the derived repair panel.
   await page.locator('#fix-toggle').check();
   await page.locator('#run-btn').click();
   await expect(page.locator('.indicator--ok')).toBeVisible();
+  await expect(page.locator('.repair-card')).toBeVisible();
+
+  // Open the expert disclosure so its content is scanned too.
+  await page.locator('.expert > summary').click();
 
   // 3. Diffie-Hellman: run the MITM.
   await select.selectOption('dh');

@@ -85,7 +85,9 @@ npm run test:a11y  # axe-core WCAG 2.1 AA gate, both themes (needs a build first
 
 ## Build & Verify
 
-- **Unit tests: 30** (Vitest, colocated `src/**/*.test.ts`), run in CI before every deploy.
+See **[ARCHITECTURE.md](ARCHITECTURE.md)** for a one-page definition of the state transition system, the term algebra, and the attacker's deduction rules.
+
+- **Unit, invariant & KAT tests: 52** (Vitest, colocated `src/**/*.test.ts`), run in CI before every deploy — including randomized property tests for unification soundness, analysis monotonicity, DH-key commutativity, search determinism, and bound-monotonicity, plus engine-derived repair-diagnostic checks.
 - **Spec KATs: 4** — the published known answers, reproduced by *search*, not script (`src/symbolic/search.test.ts`):
   1. **Needham-Schroeder Public Key → Lowe's attack found**, matching the exact six-message trace (Lowe, 1995).
   2. **Needham-Schroeder-Lowe → no attack**, state space fully exhausted.

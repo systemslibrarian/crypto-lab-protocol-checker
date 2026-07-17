@@ -787,6 +787,44 @@ input:focus-visible {
   }
 }
 
+/* ---- derived repair panel ------------------------------------------------ */
+
+.repair-card {
+  border-color: var(--ok);
+  margin-top: 18px;
+}
+.repair-steps {
+  margin: 14px 0 0;
+  padding-left: 1.3rem;
+  display: grid;
+  gap: 10px;
+}
+.repair-steps li {
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.repair-steps code {
+  font-family: var(--mono);
+  font-size: 0.86rem;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background-color: var(--panel-2);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.repair-block {
+  padding: 10px 12px;
+  border-left: 4px solid var(--ok);
+  background-color: var(--ok-tint);
+  border-radius: 0 8px 8px 0;
+  color: var(--text) !important;
+}
+.repair-conclusion {
+  font-weight: 700;
+  color: var(--ok-text);
+}
+
 /* ---- expert disclosure --------------------------------------------------- */
 
 .expert {
