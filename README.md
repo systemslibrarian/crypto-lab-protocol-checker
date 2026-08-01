@@ -89,7 +89,7 @@ See **[ARCHITECTURE.md](ARCHITECTURE.md)** for a one-page definition of the stat
 
 - **Unit, invariant & KAT tests: 52** (Vitest, colocated `src/**/*.test.ts`), run in CI before every deploy — including randomized property tests for unification soundness, analysis monotonicity, DH-key commutativity, search determinism, and bound-monotonicity, plus engine-derived repair-diagnostic checks.
 - **Spec KATs: 4** — the published known answers, reproduced by *search*, not script (`src/symbolic/search.test.ts`):
-  1. **Needham-Schroeder Public Key → Lowe's attack found**, matching the exact six-message trace (Lowe, 1995).
+  1. **Needham-Schroeder Public Key → Lowe's attack found**, matching the five-message prefix of Lowe's six-message interleaving, up to the point the attacker holds `Nb` (Lowe, 1995).
   2. **Needham-Schroeder-Lowe → no attack**, state space fully exhausted.
   3. **Naive Diffie-Hellman → MITM found** (the attacker learns the secret sent under the "shared" key).
   4. **Signed Diffie-Hellman → no attack**, a substituted share fails signature verification.

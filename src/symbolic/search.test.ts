@@ -16,8 +16,10 @@ import { canon, nonce } from './terms.ts';
  *   - G. Lowe, "An Attack on the Needham-Schroeder Public-Key Authentication
  *     Protocol," Information Processing Letters, 1995; and "Breaking and Fixing
  *     the Needham-Schroeder Public-Key Protocol," TACAS, 1996 — the attack and
- *     the one-field fix reproduced below. The six-message trace asserted here is
- *     Lowe's published interleaving.
+ *     the one-field fix reproduced below. The five messages asserted here are the
+ *     prefix of Lowe's published six-message interleaving, up to the point the
+ *     attacker holds Nb; Lowe's sixth message (I(A) -> B: {Nb}_pkB) completes the
+ *     impersonation but is not needed for the secrecy goal this search targets.
  */
 
 describe('KAT: Needham-Schroeder Public Key — Lowe attack (1995)', () => {
@@ -28,7 +30,7 @@ describe('KAT: Needham-Schroeder Public Key — Lowe attack (1995)', () => {
     expect(canon(res.goal)).toBe(canon(nonce('Nb')));
   });
 
-  it('reproduces Lowe\'s six-message trace shape', () => {
+  it('reproduces the secrecy-violating prefix of Lowe\'s trace shape', () => {
     // The honest, attacker-mediated messages, in order.
     const wire = res.trace.map((s) => `${s.from} → ${s.to} : ${s.msgText}`);
     expect(wire).toEqual([
