@@ -25,6 +25,13 @@
 
   --border: #274a41;
   --border-soft: #1d3831;
+  /* Control boundaries only. The <select> controls are filled with --surface,
+     which sits at 1.0-1.3:1 against the --panel / --surface-2 containers behind
+     them, so the border is the sole boundary and WCAG 2.1 SC 1.4.11 requires 3:1.
+     #618077 measures 3.26:1 against the tightest neighbour (--panel-2 #16302a)
+     and 3.74-4.33:1 against --panel / --bg. --border is unchanged for decorative
+     rules (card outlines, chips, table frames). */
+  --border-strong: #618077;
 
   --accent: #2dd4bf; /* teal — catalog hue #0F766E, lightened for dark contrast */
   --accent-ink: #05221d; /* text/icon on an --accent fill */
@@ -66,6 +73,9 @@
 
   --border: #cadbd5;
   --border-soft: #d7e6e0;
+  /* 3.17:1 against the darkest light-theme neighbour (--bg #eef4f2), 3.53:1 on
+     white --surface / --panel. See the dark-theme note above. */
+  --border-strong: #7f8b87;
 
   --accent: #0f766e;
   --accent-ink: #ffffff;
@@ -309,7 +319,7 @@ select {
   font: inherit;
   min-height: 44px;
   padding: 10px 2.2rem 10px 12px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   background-color: var(--surface);
   color: var(--text);
