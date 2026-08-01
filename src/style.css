@@ -120,7 +120,6 @@ body {
 
 /* ---- hero (managed standard) -------------------------------------------- */
 
-/* BEGIN cl-hero standard — managed, keep in sync across fleet */
 /* Token mapping: --text-dim/--border/--accent are this lab's own theme vars,
    AA in both palettes. */
 .cl-hero {
@@ -186,7 +185,12 @@ body {
     width: 100%;
   }
 }
-/* END cl-hero standard */
+
+/* Mobile: in the column layout the 22rem flex-basis becomes a minimum
+   HEIGHT, padding dead space above the fold. Reset it. */
+@media (max-width: 640px) {
+  .cl-hero-main { flex-basis: auto; min-width: 0; }
+}
 
 /* ---- generic blocks ------------------------------------------------------ */
 

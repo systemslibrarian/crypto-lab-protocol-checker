@@ -135,11 +135,16 @@ export function mountApp(root: HTMLElement): void {
   const shell = el('div', { class: 'page-shell' });
 
   shell.append(hero());
-  shell.append(honestyPanel());
-  shell.append(introCard());
-  shell.append(labCard());
-  shell.append(libraryCard());
-  shell.append(scopeCard());
+
+  // WCAG 1.3.1 — the page's primary content needs a main landmark so assistive
+  // tech can reach it directly instead of walking the hero first.
+  const mainRegion = el('main');
+  mainRegion.append(honestyPanel());
+  mainRegion.append(introCard());
+  mainRegion.append(labCard());
+  mainRegion.append(libraryCard());
+  mainRegion.append(scopeCard());
+  shell.append(mainRegion);
 
   root.append(shell);
   render();
