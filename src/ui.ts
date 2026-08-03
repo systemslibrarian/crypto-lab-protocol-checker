@@ -742,8 +742,14 @@ function knowledgePanel(r: SearchResult): HTMLElement {
   // Facts the attacker holds after the currently-shown step (or the initial
   // knowledge before any message).
   const knownRaw: Fact[] = state.step < 0 ? initialKnowledge(r) : analyse(r.trace[state.step].knownAfter);
-  const prevKnown =
-    state.step <= 0 ? new Set<string>() : new Set(analyse(r.trace[state.step - 1].knownAfter).map((f) => canon(f.term)));
+  // What the attacker held one step earlier, so "new at this step" means it.
+  // At step 0 that predecessor is the *initial* knowledge panel (names, public
+  // keys, corrupt parties' keys) — not the empty set, which would highlight the
+  // whole public baseline as freshly derived from message 1 and contradict the
+  // panel's own "before any message" listing.
+  const prevFacts: Fact[] =
+    state.step < 0 ? [] : state.step === 0 ? initialKnowledge(r) : analyse(r.trace[state.step - 1].knownAfter);
+  const prevKnown = new Set(prevFacts.map((f) => canon(f.term)));
 
   const goalCanon = canon(r.goal);
 
