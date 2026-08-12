@@ -1,71 +1,58 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
-
-const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
+import { expect, test } from '@playwright/test';
+import {
+  boot,
+  driveAllStates,
+  expectBaselineNotStale,
+  NARROW,
+  reportCollected,
+  watchPageErrors,
+} from './gate';
 
 /**
- * driveDemos — put EVERY panel into its post-interaction state before scanning.
- * Axe only checks what is in the DOM, so we run the full flow: the Lowe attack
- * (attack found + trace + knowledge), the fix (secure verdict), a DH run, and
- * the link-only Kerberos entry — stepping the trace so the dynamic result
- * regions are all rendered.
+ * WCAG A/AA regression gate.
+ *
+ * The lab is driven along everything it teaches: the idle arrival state, where
+ * nothing has run and the verdict indicator is on neither of its two coloured
+ * states; the skip link focused; the Lowe attack on Needham-Schroeder, then the
+ * trace stepped backwards message by message to `start` — which is the only way
+ * to reach the attacker's INITIAL knowledge panel — and forwards again, with a
+ * scan at every step, because the trace rows and ladder rungs render at
+ * `opacity: 0.4` and `0.32` until the stepper reaches them and the set of faded
+ * elements is different at each one; the expert disclosure opened through its own
+ * summary; Lowe's fix ticked (which re-arms the protocol to idle and silently
+ * rebuilds the disclosure shut), then run for the secure verdict and the derived
+ * repair panel; the same two verdicts on naive and signed Diffie-Hellman; and the
+ * Kerberos link-only body, which disables the run button and replaces the whole
+ * lab. That last one is where the gate this replaces happened to leave the page
+ * — and, since it scanned once at the end, it is the ONLY state it ever measured.
+ * Every state here is scanned, in both themes, at desktop and phone width.
+ *
+ * See `gate.ts` for why nothing is injected into the page (this lab reads the
+ * reduced-motion preference in SCRIPT at module load, which no style tag can
+ * reach), why the disclosure is clicked rather than forced open, why the lab's
+ * defaults are asserted rather than assumed, and why `violations` is not the
+ * whole oracle.
  */
-async function driveDemos(page: Page): Promise<void> {
-  const select = page.locator('#proto-select');
 
-  // 1. Needham-Schroeder: run the attack.
-  await select.selectOption('ns');
-  await page.locator('#run-btn').click();
-  await expect(page.locator('.indicator--alarm')).toBeVisible();
-  // step the trace back and forth so both current/idle states are exercised
-  const back = page.getByRole('button', { name: '◀ Step back' });
-  for (let i = 0; i < 3; i++) if (await back.isEnabled()) await back.click();
-  const fwd = page.getByRole('button', { name: 'Step ▶' });
-  for (let i = 0; i < 2; i++) if (await fwd.isEnabled()) await fwd.click();
-
-  // 2. Apply the Lowe fix → secure verdict + the derived repair panel.
-  await page.locator('#fix-toggle').check();
-  await page.locator('#run-btn').click();
-  await expect(page.locator('.indicator--ok')).toBeVisible();
-  await expect(page.locator('.repair-card')).toBeVisible();
-
-  // Open the expert disclosure so its content is scanned too.
-  await page.locator('.expert > summary').click();
-
-  // 3. Diffie-Hellman: run the MITM.
-  await select.selectOption('dh');
-  await page.locator('#run-btn').click();
-  await expect(page.locator('.indicator--alarm')).toBeVisible();
-
-  // 4. Kerberos: link-only body (run disabled).
-  await select.selectOption('kerberos');
-  await expect(page.locator('#lab-body a')).toBeVisible();
-
-  // Reveal any collapsed/animated content generically and settle.
-  await page.addStyleTag({ content: `*,*::before,*::after{animation:none!important;transition:none!important}` });
-  await page.evaluate(() => {
-    document.querySelectorAll('details').forEach((d) => ((d as HTMLDetailsElement).open = true));
+for (const theme of ['dark', 'light'] as const) {
+  test(`no WCAG A/AA violations in ${theme} theme`, async ({ page }) => {
+    test.setTimeout(900_000);
+    const errors = watchPageErrors(page);
+    await boot(page, theme);
+    await driveAllStates(page, theme);
+    expectBaselineNotStale();
+    expect(errors, errors.join('\n')).toEqual([]);
+    reportCollected();
   });
-  await page.waitForTimeout(300);
+
+  test(`no WCAG A/AA violations in ${theme} theme at 380px`, async ({ page }) => {
+    test.setTimeout(900_000);
+    const errors = watchPageErrors(page);
+    await page.setViewportSize(NARROW);
+    await boot(page, theme);
+    await driveAllStates(page, `${theme} @380px`);
+    expectBaselineNotStale();
+    expect(errors, errors.join('\n')).toEqual([]);
+    reportCollected();
+  });
 }
-
-async function scan(page: Page): Promise<void> {
-  const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
-  expect(
-    violations.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.map((n) => n.target.join(' ')).slice(0, 5) })),
-  ).toEqual([]);
-}
-
-test('no WCAG A/AA violations — dark theme', async ({ page }) => {
-  await page.goto('.');
-  await driveDemos(page);
-  await scan(page);
-});
-
-test('no WCAG A/AA violations — light theme', async ({ page }) => {
-  await page.goto('.');
-  await page.locator('#cl-theme-toggle').click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await driveDemos(page);
-  await scan(page);
-});

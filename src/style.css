@@ -353,16 +353,26 @@ select {
   opacity: 0.55;
   cursor: not-allowed;
 }
+/* SC 1.4.11 — the stepper buttons. `--border-strong` is defined at the top of
+   this file with a comment saying it is for control boundaries, and it was
+   applied to exactly ONE control (the <select>). A ghost button has no fill at
+   all, so its border is its whole boundary, and `--border` measured 1.44:1
+   against the panel behind it. */
 .btn--ghost {
   background-color: transparent;
   color: var(--text);
-  border-color: var(--border);
+  border-color: var(--border-strong);
 }
 
+/* SC 2.4.7 — `.trace` and `.knowledge` carry `tabindex="0"` so that WCAG 2.1.1
+   can reach them (both are `max-height: 24rem; overflow: auto`), and anything
+   given a tabindex needs a visible focus indicator. They were not in this list. */
 button:focus-visible,
 select:focus-visible,
 a:focus-visible,
-input:focus-visible {
+input:focus-visible,
+.trace:focus-visible,
+.knowledge:focus-visible {
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
@@ -577,16 +587,25 @@ input:focus-visible {
   max-height: 24rem;
   overflow: auto;
 }
+/* A trace row that the stepper has not reached yet used to render at
+   `opacity: 0.4`. That is not de-emphasis, it is illegibility: measured through
+   the gate, the arrow fell to 1.76:1, the note to 1.92:1 and the wire to 2.41:1
+   in the light theme, and axe's own color-contrast rule fired on the rows too.
+   It also contradicted this stylesheet's stated contract, three lines into the
+   file: "Muted text lowers *lightness* (never opacity)". It does now — the
+   un-reached rows take --text-muted, which is 5.59:1 dark and 5.42:1 light on
+   --panel-2, and the reached rows take the full-strength inks. */
 .trace li {
   padding: 10px 12px;
   border: 1px solid var(--border-soft);
   border-radius: 10px;
   background-color: var(--panel-2);
-  opacity: 0.4;
-  transition: opacity 0.2s ease, border-color 0.2s ease;
+  transition: color 0.2s ease, border-color 0.2s ease;
 }
-.trace li.shown {
-  opacity: 1;
+.trace li:not(.shown) .wire,
+.trace li:not(.shown) .arrow,
+.trace li:not(.shown) .note {
+  color: var(--text-muted);
 }
 .trace li.current {
   border-color: var(--accent);
@@ -734,15 +753,17 @@ input:focus-visible {
   padding: 0;
   list-style: none;
 }
+/* Same correction as `.trace li` above, and worse before it: 0.32 took the
+   ladder's endpoints and message text to 2.68:1 in the dark theme. */
 .rung {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   padding: 5px 0;
-  opacity: 0.32;
-  transition: opacity 0.2s ease;
+  transition: color 0.2s ease;
 }
-.rung.shown {
-  opacity: 1;
+.rung:not(.shown) .rung-endpoints,
+.rung:not(.shown) .rung-msg {
+  color: var(--text-muted);
 }
 .rung-bar {
   margin: 0 8px;

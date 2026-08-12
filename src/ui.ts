@@ -679,9 +679,14 @@ function tracePanel(r: SearchResult): HTMLElement {
     return panel;
   }
 
+  // NOT `role="region"`. Putting an explicit role on a <ul> REPLACES its
+  // implicit `list` role, which orphans every <li> inside it — axe's `listitem`
+  // rule fired on all of them, in every state that has a trace. `tabindex="0"`
+  // is what WCAG 2.1.1 actually needs here (this list is `max-height: 24rem;
+  // overflow: auto` and routinely longer), and `aria-label` is permitted on a
+  // list, so the label survives without costing the semantics.
   const list = el('ul', {
     class: 'trace',
-    role: 'region',
     tabindex: '0',
     'aria-label': 'Attack message trace',
   });
@@ -767,9 +772,10 @@ function knowledgePanel(r: SearchResult): HTMLElement {
     .map((f, i) => ({ f, i }))
     .sort((a, b) => rank(a.f) - rank(b.f) || a.i - b.i)
     .map((x) => x.f);
+  // See the note on the trace list: `role="region"` here removed the list
+  // semantics from every fact the attacker holds.
   const list = el('ul', {
     class: 'knowledge',
-    role: 'region',
     tabindex: '0',
     'aria-label': 'Attacker knowledge set',
   });
