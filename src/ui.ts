@@ -713,8 +713,8 @@ function traceItem(s: TraceStep, i: number): HTMLElement {
 
 function stepper(r: SearchResult): HTMLElement {
   const bar = el('div', { class: 'stepper' });
-  const prev = el('button', { class: 'btn btn--ghost', type: 'button' }, ['◀ Step back']) as HTMLButtonElement;
-  const next = el('button', { class: 'btn btn--ghost', type: 'button' }, ['Step ▶']) as HTMLButtonElement;
+  const prev = el('button', { id: 'trace-step-back', class: 'btn btn--ghost', type: 'button' }, ['◀ Step back']) as HTMLButtonElement;
+  const next = el('button', { id: 'trace-step-forward', class: 'btn btn--ghost', type: 'button' }, ['Step ▶']) as HTMLButtonElement;
   prev.disabled = state.step <= -1;
   next.disabled = state.step >= r.trace.length - 1;
   prev.addEventListener('click', () => {
