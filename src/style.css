@@ -308,6 +308,25 @@ a:hover {
 .field {
   display: grid;
   gap: 6px;
+  /* WebKit sizes a <select>'s intrinsic width from its WIDEST OPTION, and that
+     contribution reaches the document even when the control's own box fits. The
+     protocol options run to 54 characters ("Needham-Schroeder (public key) — NSPK
+     1978 · Lowe 1995"), so at 390px this page scrolled sideways by 92px in WebKit
+     while Chromium measured 0 — the select's rect is 324px in both. Proven by
+     shortening every option's text in the live page: 482px of scroll width became
+     390px, and restoring it brought the 92px back.
+
+     `clip` rather than `hidden`, so this never becomes a scroll container. The
+     clip margin keeps the focus ring in engines that support it; WebKit does not
+     (CSS.supports says false), so the ring is also pulled inside the control's own
+     box below, where no clip can reach it. */
+  overflow-x: clip;
+  overflow-clip-margin: 5px;
+}
+.field select:focus-visible {
+  /* 3px ring drawn just inside the border box: fully visible in both engines,
+     and independent of overflow-clip-margin support. */
+  outline-offset: -3px;
 }
 .field label {
   font-size: 0.78rem;
